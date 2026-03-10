@@ -1,0 +1,56 @@
+This is the username and password for Shoe Point Database.
+Username: shoepointsagar
+Password: Shameemshoepoint
+Driver installation: python -m pip install "pymongo[srv]==3.12"
+Connection String to application code: mongodb+srv://shoepointsagar:Shameemshoepoint@cluster0.dar81b1.mongodb.net/?appName=Cluster0
+
+Prompt:
+1. Core System: Native Desktop Evolution
+Platform: Transition from a Flask web server to a PyQt6 or CustomTkinter native Windows application.
+
+Window Management: The software must launch in a borderless or dedicated Windows frame with a custom taskbar icon (icon.ico) and no visible browser URL bar.
+
+Hardware Interface: Implement direct thermal printing via the win32print or python-escpos library to communicate with the EXEO printer without browser print dialogs.
+
+2. Cloud & Offline-First Data Architecture
+Primary Database: Connect to MongoDB Atlas using the string: mongodb+srv://shoepointsagar_db_user:Pyh5kZDgQkZJ1coZ@cluster0....
+
+Local Buffer: Maintain a local SQLite database (shoepoint.db) to allow sales during internet outages.
+
+Background Sync:
+
+Add a synced status column to all local records.
+
+Implement a background thread that monitors the network and pushes "unsynced" sales to the cloud once a connection is detected.
+
+3. Functional Business Logic Updates
+Unlocked Entry: Remove all character limits on Supplier, Material, and Batch Code fields to allow for long, descriptive identifiers.
+
+Manual Pricing:
+
+Add Item Phase: Force entry of both Cost Price and Target Selling Price.
+
+Sales Phase: Scanning an item must pull the pre-set Target Selling Price from the database instead of using a markup formula.
+
+Barcode Identification:
+
+Replace QR code generation with Code128 Linear Barcodes using the python-barcode library.
+
+Update all printed labels and the "Scan" input to support standard 1D laser barcode scanners.
+
+4. Advanced Financial Ledger & Analytics
+Discount Tracking:
+
+Add a discount_value field to the Sale model.
+
+Update the Owner Panel to display a "Total Discounts This Month" metric.
+
+Enhanced Search: The ledger must allow filtering by specific discount amounts, allowing the owner to track how much revenue is lost to price cuts.
+
+5. Logo.ico should be shown as the icon of the software.
+User Experience (UX) Goals
+Zero-Configuration: The user double-clicks ShoePoint.exe, and the window opens immediately.
+
+Visual Branding: The app uses a dark "Enterprise" theme with the Shoe Point logo embedded in the taskbar and splash screen.
+
+Customer Trust: The Customer Display continues to update in real-time, showing the massive price and dynamic UPI QR code.

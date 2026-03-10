@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoe Point — Customer Display</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        (function(){ var t=localStorage.getItem('sp_theme')||'dark'; document.documentElement.setAttribute('data-theme',t); })();
+    </script>
+    <style>
+        [data-theme="dark"] {
+            --bg:#07080d; --text:#eaeef4; --muted:rgba(234,238,244,0.4);
+            --green:#00e99b; --blue:#3d8bff;
+            --blob1:rgba(0,233,155,0.12); --blob2:rgba(61,139,255,0.10);
+        }
+        [data-theme="light"] {
+            --bg:#f0f2f7; --text:#111827; --muted:rgba(17,24,39,0.4);
+            --green:#00a86b; --blue:#1a6fe8;
+            --blob1:rgba(0,168,107,0.10); --blob2:rgba(26,111,232,0.08);
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow:hidden;transition:background 0.3s,color 0.3s;}
+        .bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;}
+        .bg-blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;}
+        .bg-blob-1{width:60vw;height:60vw;top:-20vw;left:-15vw;background:radial-gradient(circle,var(--blob1) 0%,transparent 70%);}
+        .bg-blob-2{width:50vw;height:50vw;bottom:-15vw;right:-10vw;background:radial-gradient(circle,var(--blob2) 0%,transparent 70%);}
+        .state{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease;}
+        .state.hidden{opacity:0;pointer-events:none;}
+        #idle-state .logo-wrap{position:relative;margin-bottom:36px;}
+        #idle-state .logo-wrap::before{content:'';position:absolute;inset:-30px;border-radius:50%;background:radial-gradient(circle,rgba(0,233,155,0.15) 0%,transparent 70%);animation:idlePulse 3s ease-in-out infinite;}
+        @keyframes idlePulse{0%,100%{transform:scale(1);opacity:0.6;}50%{transform:scale(1.1);opacity:1;}}
+        #idle-state img{width:min(300px,55vw);position:relative;z-index:1;filter:drop-shadow(0 0 50px rgba(0,233,155,0.35));}
+        #idle-state .welcome-text{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;letter-spacing:-0.5px;text-align:center;margin-bottom:12px;}
+        #idle-state .sub-text{font-size:clamp(1rem,2.2vw,1.25rem);font-weight:400;color:var(--muted);text-align:center;}
+        .ticker-dots{display:flex;gap:8px;margin-top:36px;}
+        .ticker-dots span{width:8px;height:8px;border-radius:50%;background:var(--muted);animation:dotBounce 1.5s ease-in-out infinite;}
+        .ticker-dots span:nth-child(2){animation-delay:0.2s;}
+        .ticker-dots span:nth-child(3){animation-delay:0.4s;}
+        @keyframes dotBounce{0%,100%{opacity:0.3;transform:scale(1);}50%{opacity:1;transform:scale(1.4);background:var(--green);}}
+        #payment-state{gap:0;padding:32px;}
+        .pay-top-label{font-size:clamp(0.8rem,1.8vw,1rem);font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+        .amount-display{font-size:clamp(5rem,18vw,11rem);font-weight:900;letter-spacing:-3px;line-height:1;color:var(--green);text-shadow:0 0 80px rgba(0,233,155,0.35);animation:amountPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275);margin-bottom:8px;}
+        @keyframes amountPop{from{transform:scale(0.8);opacity:0;}to{transform:scale(1);opacity:1;}}
+        .rupee-sign{font-size:0.55em;vertical-align:0.08em;opacity:0.75;}
+        .divider-line{width:min(480px,80vw);height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);margin:24px 0;}
+        [data-theme="light"] .divider-line{background:linear-gradient(90deg,transparent,rgba(0,0,0,0.12),transparent);}
+        .qr-frame{background:white;border-radius:18px;padding:14px;box-shadow:0 0 0 1px rgba(255,255,255,0.12),0 20px 60px rgba(0,0,0,0.5),0 0 80px rgba(0,233,155,0.15);animation:qrAppear 0.4s ease;}
+        [data-theme="light"] .qr-frame{box-shadow:0 0 0 1px rgba(0,0,0,0.08),0 20px 60px rgba(0,0,0,0.15),0 0 80px rgba(0,168,107,0.10);}
+        @keyframes qrAppear{from{transform:scale(0.9);opacity:0;}to{transform:scale(1);opacity:1;}}
+        #display-qr{width:min(240px,50vw);height:min(240px,50vw);display:block;border-radius:8px;}
+        .scan-label{font-size:clamp(1rem,2.5vw,1.3rem);font-weight:600;color:var(--text);margin-top:24px;text-align:center;}
+        .upi-label{font-size:clamp(0.78rem,1.6vw,0.92rem);color:var(--muted);margin-top:8px;text-align:center;}
+        .upi-apps{display:flex;gap:12px;align-items:center;margin-top:16px;opacity:0.55;}
+        .upi-apps span{font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.15);color:var(--muted);}
+        [data-theme="light"] .upi-apps span{border-color:rgba(0,0,0,0.12);}
+        .live-dot{position:fixed;bottom:24px;right:28px;display:flex;align-items:center;gap:7px;font-size:0.72rem;font-weight:600;color:var(--muted);z-index:10;}
+        .live-dot::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:liveBlink 2s ease-in-out infinite;}
+        @keyframes liveBlink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+        .hidden{display:none !important;}
+    </style>
+</head>
+<body>
+<div class="bg-blobs">
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+</div>
+
+<div class="state" id="idle-state">
+    <div class="logo-wrap">
+        <img src="/static/Logo.png" alt="Shoe Point">
+    </div>
+    <p class="welcome-text">Welcome to Shoe Point</p>
+    <p class="sub-text">Please bring your items to the counter</p>
+    <div class="ticker-dots"><span></span><span></span><span></span></div>
+</div>
+
+<div class="state hidden" id="payment-state">
+    <p class="pay-top-label">Amount to Pay</p>
+    <div class="amount-display"><span class="rupee-sign">₹</span><span id="display-amount">0</span></div>
+    <div class="divider-line"></div>
+    <div class="qr-frame"><img id="display-qr" src="" alt="UPI QR Code"></div>
+    <p class="scan-label">Scan to Pay</p>
+    <p class="upi-label">Works with all UPI apps</p>
+    <div class="upi-apps"><span>GPay</span><span>PhonePe</span><span>Paytm</span><span>BHIM</span></div>
+</div>
+
+<div class="live-dot">LIVE</div>
+
+<script>
+    // Apply theme on load
+    (function(){
+        var t=localStorage.getItem('sp_theme')||'dark';
+        document.documentElement.setAttribute('data-theme',t);
+    })();
+
+    // Wake Lock
+    let wakeLock=null;
+    const requestWakeLock=async()=>{
+        try{ if('wakeLock' in navigator) wakeLock=await navigator.wakeLock.request('screen'); }
+        catch(err){ console.warn('Wake Lock failed:',err.message); }
+    };
+    requestWakeLock();
+    document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') requestWakeLock(); });
+
+    // Poll display state
+    let lastActive=null;
+    setInterval(()=>{
+        fetch('/api/display_status').then(r=>r.json()).then(data=>{
+            const idle=document.getElementById('idle-state');
+            const payment=document.getElementById('payment-state');
+            if(data.active){
+                if(!lastActive){
+                    idle.classList.add('hidden');
+                    payment.classList.remove('hidden');
+                    document.getElementById('display-amount').textContent=data.amount;
+                    document.getElementById('display-qr').src='/static/qrcodes/'+data.qr_url+'?t='+Date.now();
+                }
+                lastActive=true;
+            } else {
+                if(lastActive!==false){ payment.classList.add('hidden'); idle.classList.remove('hidden'); }
+                lastActive=false;
+            }
+        }).catch(()=>{});
+    },1000);
+</script>
+</body>
+</html>

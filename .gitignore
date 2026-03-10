@@ -1,0 +1,19 @@
+# Local Database
+shoepoint.db
+instance/
+
+# Python folders
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Packaging folders
+build/
+dist/
+*.spec
+
+# Local generated images
+static/mobile_connect.png
+static/display_connect.png
+qrcodes/

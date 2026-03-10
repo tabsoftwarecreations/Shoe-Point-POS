@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoe Point — POS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        (function(){ var t=localStorage.getItem('sp_theme')||'dark'; document.documentElement.setAttribute('data-theme',t); })();
+    </script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        [data-theme="dark"] {
+            --bg-deep:#07080d; --surface:rgba(255,255,255,0.04); --surface2:rgba(255,255,255,0.07);
+            --border:rgba(255,255,255,0.07); --border-hi:rgba(255,255,255,0.14);
+            --green:#00e99b; --green-dim:rgba(0,233,155,0.12);
+            --blue:#3d8bff; --blue-dim:rgba(61,139,255,0.12);
+            --red:#ff4f6d; --red-dim:rgba(255,79,109,0.12);
+            --amber:#f5a623; --amber-dim:rgba(245,166,35,0.12);
+            --text:#eaeef4; --muted:rgba(234,238,244,0.38);
+            --nav-bg:rgba(7,8,13,0.88); --modal-bg:#0e0f1a; --splash-bg:#07080d;
+            --blob-o:0.5; --close-f:invert(1) opacity(0.45); --close-h:invert(1) opacity(0.9);
+            --logo-glow: drop-shadow(0 0 8px rgba(0,233,155,0.7)) drop-shadow(0 0 22px rgba(0,233,155,0.4)) drop-shadow(0 0 45px rgba(0,233,155,0.18));
+            --logo-glow-hi: drop-shadow(0 0 14px rgba(0,233,155,1.0)) drop-shadow(0 0 35px rgba(0,233,155,0.65)) drop-shadow(0 0 60px rgba(0,233,155,0.3));
+        }
+        [data-theme="light"] {
+            --bg-deep:#f0f2f7; --surface:rgba(255,255,255,0.82); --surface2:rgba(255,255,255,0.97);
+            --border:rgba(0,0,0,0.09); --border-hi:rgba(0,0,0,0.18);
+            --green:#00a86b; --green-dim:rgba(0,168,107,0.10);
+            --blue:#1a6fe8; --blue-dim:rgba(26,111,232,0.10);
+            --red:#e03050; --red-dim:rgba(224,48,80,0.10);
+            --amber:#c97b0a; --amber-dim:rgba(201,123,10,0.10);
+            --text:#111827; --muted:rgba(17,24,39,0.45);
+            --nav-bg:rgba(240,242,247,0.92); --modal-bg:#ffffff; --splash-bg:#f0f2f7;
+            --blob-o:0.12; --close-f:opacity(0.4); --close-h:opacity(0.85);
+            --logo-glow: drop-shadow(0 0 6px rgba(0,168,107,0.5)) drop-shadow(0 0 18px rgba(0,168,107,0.25));
+            --logo-glow-hi: drop-shadow(0 0 10px rgba(0,168,107,0.8)) drop-shadow(0 0 28px rgba(0,168,107,0.45));
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        html,body{height:100%;}
+        body{background:var(--bg-deep);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;overflow-x:hidden;transition:background 0.3s,color 0.3s;}
+        .blob{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;opacity:var(--blob-o);}
+        .blob-green{width:520px;height:520px;top:-160px;left:-140px;background:radial-gradient(circle,rgba(0,233,155,0.10) 0%,transparent 70%);}
+        .blob-blue{width:420px;height:420px;bottom:-120px;right:-100px;background:radial-gradient(circle,rgba(61,139,255,0.09) 0%,transparent 70%);}
+        #splash-screen{position:fixed;inset:0;background:var(--splash-bg);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;transition:opacity 0.9s;}
+        #splash-screen img{width:220px;filter:drop-shadow(0 0 40px rgba(0,233,155,0.45));animation:splashPulse 2s ease-in-out infinite;}
+        @keyframes splashPulse{0%,100%{transform:scale(1);opacity:.85;}50%{transform:scale(1.05);opacity:1;}}
+        #splash-screen .splash-line{width:180px;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent);animation:shimmer 1.8s ease-in-out infinite;}
+        @keyframes shimmer{0%,100%{opacity:.3;}50%{opacity:1;}}
+        .top-nav{position:sticky;top:0;z-index:200;background:var(--nav-bg);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--border);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;transition:background 0.3s,border-color 0.3s;}
+
+        /* ── LOGO GLOW ── */
+        .nav-logo{
+            height:46px;object-fit:contain;
+            filter:var(--logo-glow);
+            animation:logoGlowPulse 3s ease-in-out infinite;
+            transition:transform 0.2s;
+            cursor:pointer;
+        }
+        .nav-logo:hover{
+            filter:var(--logo-glow-hi);
+            transform:scale(1.06);
+        }
+        @keyframes logoGlowPulse{
+            0%,100%{filter:var(--logo-glow);}
+            50%{filter:var(--logo-glow-hi);}
+        }
+
+        .nav-actions{display:flex;gap:8px;align-items:center;}
+        .theme-toggle{width:36px;height:36px;border-radius:50%;border:1px solid var(--border-hi);background:var(--surface);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s,border-color 0.2s,transform 0.2s;}
+        .theme-toggle:hover{background:var(--surface2);border-color:var(--green);transform:rotate(25deg) scale(1.1);}
+        .pill-btn{display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:999px;border:1px solid var(--border-hi);background:var(--surface);color:var(--text);font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;text-decoration:none;transition:background 0.18s,color 0.18s,transform 0.12s;}
+        .pill-btn:hover{background:var(--surface2);color:var(--text);transform:translateY(-1px);}
+        .pill-btn.green{border-color:rgba(0,200,120,0.4);color:var(--green);}
+        .pill-btn.green:hover{background:var(--green-dim);border-color:var(--green);}
+        .alerts-zone{padding:14px 28px 0;position:relative;z-index:1;}
+        .flash-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-radius:10px;border:1px solid;font-size:0.85rem;font-weight:500;margin-bottom:8px;animation:popIn 0.25s ease;}
+        @keyframes popIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+        .flash-bar.success{background:var(--green-dim);border-color:rgba(0,200,120,0.3);color:var(--green);}
+        .flash-bar.danger{background:var(--red-dim);border-color:rgba(224,48,80,0.3);color:var(--red);}
+        .flash-bar.warning{background:var(--amber-dim);border-color:rgba(200,123,10,0.3);color:var(--amber);}
+        .flash-close{background:none;border:none;cursor:pointer;font-size:1.1rem;color:inherit;opacity:0.6;padding:0;}
+        .flash-close:hover{opacity:1;}
+        .main-wrap{padding:24px 28px 40px;position:relative;z-index:1;}
+        .pos-layout{display:grid;grid-template-columns:1fr 300px;gap:18px;}
+        .glass{background:var(--surface);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(14px);transition:border-color 0.2s,background 0.3s;}
+        .glass:hover{border-color:var(--border-hi);}
+        .panel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--border);}
+        .panel-label{font-size:0.68rem;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);}
+        .panel-body{padding:22px;}
+        .field-lbl{display:block;font-size:0.65rem;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+        .di{width:100%;padding:11px 15px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.95rem;outline:none;transition:border-color 0.18s,background 0.18s,box-shadow 0.18s;-webkit-appearance:none;}
+        .di:focus{border-color:var(--green);background:var(--green-dim);box-shadow:0 0 0 3px rgba(0,168,107,0.08);}
+        .di::placeholder{color:var(--muted);font-family:'Outfit',sans-serif;font-size:0.88rem;}
+        .di[readonly]{opacity:0.5;cursor:not-allowed;}
+        .di-lg{font-size:1.05rem;padding:13px 15px;}
+        .di.red-text{color:var(--red);}
+        .ig{display:flex;}
+        .ig-pre{display:flex;align-items:center;padding:0 13px;background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:10px 0 0 10px;color:var(--muted);font-size:1rem;white-space:nowrap;}
+        .ig .di{border-radius:0;border-left:none;border-right:none;}
+        .ig-end{padding:0 14px;background:var(--surface);border:1px solid var(--border);border-left:none;border-radius:0 10px 10px 0;color:var(--muted);font-size:0.75rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;font-family:'Outfit',sans-serif;}
+        .ig-end:hover{color:var(--green);border-color:var(--green);}
+        .pay-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:26px;}
+        .pay-btn{position:relative;overflow:hidden;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;padding:18px 12px;cursor:pointer;transition:transform 0.14s,box-shadow 0.14s;}
+        .pay-btn:hover{transform:translateY(-2px);}
+        .pay-btn:active{transform:scale(0.98);}
+        .pay-cash{background:linear-gradient(135deg,#00c47c,#00e99b);color:#061a10;box-shadow:0 4px 24px rgba(0,233,155,0.2);}
+        .pay-cash:hover{box-shadow:0 6px 32px rgba(0,233,155,0.35);}
+        .pay-upi{background:linear-gradient(135deg,#1f6bff,#3d8bff);color:white;box-shadow:0 4px 24px rgba(61,139,255,0.2);}
+        .pay-upi:hover{box-shadow:0 6px 32px rgba(61,139,255,0.35);}
+        #reader{border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px;display:none;}
+        .side-btn{display:block;width:100%;padding:15px 18px;border-radius:11px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Outfit',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;transition:background 0.17s,border-color 0.17s,transform 0.12s;}
+        .side-btn:hover{background:var(--surface2);border-color:var(--border-hi);transform:translateY(-1px);color:var(--text);}
+        .side-btn.g{border-color:rgba(0,200,120,0.4);color:var(--green);}
+        .side-btn.g:hover{background:var(--green-dim);border-color:var(--green);}
+        .side-btn.r{border-color:rgba(224,48,80,0.3);color:var(--red);}
+        .side-btn.r:hover{background:var(--red-dim);border-color:var(--red);}
+        .inv-section{margin-top:28px;}
+        .sec-divider{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+        .sec-divider span{font-size:0.65rem;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+        .sec-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+        .inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(134px,1fr));gap:10px;}
+        .inv-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px 12px;text-align:center;transition:border-color 0.17s,transform 0.17s,background 0.3s;}
+        .inv-card:hover{border-color:var(--border-hi);background:var(--surface2);transform:translateY(-2px);}
+        .inv-card img{width:52px;height:52px;object-fit:contain;background:white;border-radius:6px;padding:3px;margin-bottom:8px;}
+        .no-qr-msg{display:none;font-size:0.65rem;color:var(--muted);margin-bottom:8px;padding:6px;border:1px dashed var(--border-hi);border-radius:6px;}
+        .i-batch{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--muted);display:block;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .i-qty{font-size:0.72rem;font-weight:700;color:var(--green);display:block;margin-bottom:8px;}
+        .card-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+        .i-btn{display:block;width:100%;padding:5px 0;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);font-size:0.65rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;text-decoration:none;text-align:center;transition:color 0.15s,border-color 0.15s,background 0.15s;}
+        .i-btn:hover{color:var(--green);border-color:var(--green);}
+        .i-btn.del:hover{color:var(--red);border-color:var(--red);background:var(--red-dim);}
+        .modal-content{background:var(--modal-bg);border:1px solid var(--border-hi);border-radius:18px;color:var(--text);font-family:'Outfit',sans-serif;transition:background 0.3s;}
+        .modal-header{border-bottom:1px solid var(--border);padding:20px 24px;}
+        .modal-title{font-size:1rem;font-weight:700;}
+        .modal-body{padding:24px;}
+        .btn-close{filter:var(--close-f);}
+        .btn-close:hover{filter:var(--close-h);}
+        .form-duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+        .form-field{margin-bottom:14px;}
+        .field-hint{font-size:0.67rem;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;}
+        .modal-cta{display:block;width:100%;padding:14px;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity 0.17s,transform 0.12s;}
+        .modal-cta:hover{opacity:0.9;transform:translateY(-1px);}
+        .modal-cta.green{background:linear-gradient(135deg,#00c47c,#00e99b);color:#061a10;}
+        .modal-cta.red{background:linear-gradient(135deg,#c0283e,#ff4f6d);color:white;}
+        .qr-preview{width:170px;height:170px;display:block;margin:0 auto 14px;border-radius:10px;background:white;padding:8px;border:1px solid var(--border);}
+        .qr-url{text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--muted);word-break:break-all;}
+        .qr-url.g{color:var(--green);margin-top:6px;}
+        @media(max-width:920px){.pos-layout{grid-template-columns:1fr;}.main-wrap{padding:16px 14px 32px;}.top-nav{padding:0 14px;}.alerts-zone{padding:12px 14px 0;}#inventory-list{display:none;}}
+        @media(max-width:540px){.di-lg{font-size:1.1rem;padding:15px;}.pay-btn{padding:20px 10px;}.pay-row{gap:10px;}}
+    </style>
+</head>
+<body>
+<div class="blob blob-green"></div>
+<div class="blob blob-blue"></div>
+<div id="splash-screen">
+    <img src="/static/Logo.png" alt="Shoe Point">
+    <div class="splash-line"></div>
+</div>
+<nav class="top-nav">
+    <img src="/static/Logo.png" class="nav-logo" alt="Shoe Point">
+    <div class="nav-actions">
+        <button class="pill-btn" data-bs-toggle="modal" data-bs-target="#mobileModal">Connect Phone</button>
+        <button class="pill-btn" data-bs-toggle="modal" data-bs-target="#displayModal">Customer Display</button>
+        <a href="/owner" class="pill-btn green">⚙ Owner Panel</a>
+        <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle Light / Dark">🌙</button>
+    </div>
+</nav>
+<div class="alerts-zone">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+            <div class="flash-bar {{ 'danger' if category == 'error' else 'success' }}">
+                <span>{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
+            </div>
+        {% endfor %}{% endif %}
+    {% endwith %}
+    {% if low_stock %}
+    <div class="flash-bar warning">
+        <span>⚠&nbsp; {{ low_stock|length }} item(s) critically low — check Owner Panel.</span>
+        <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
+    </div>
+    {% endif %}
+</div>
+<div class="main-wrap">
+    <div class="pos-layout">
+        <div class="glass">
+            <div class="panel-head"><span class="panel-label">Point of Sale Terminal</span></div>
+            <div class="panel-body">
+                <div id="reader"></div>
+                <form action="/sell" method="POST">
+                    <div class="form-field">
+                        <label class="field-lbl">Batch Code</label>
+                        <input type="text" name="batch_no" id="scan_box" class="di di-lg"
+                               placeholder="Scan barcode or type batch code..."
+                               autofocus required autocomplete="off"
+                               oninput="fetchPrice()"
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();fetchPrice();}">
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div>
+                            <label class="field-lbl">Selling Price</label>
+                            <div class="ig">
+                                <span class="ig-pre">₹</span>
+                                <input type="number" name="sell_price" id="price_box" class="di" required readonly>
+                                <button class="ig-end" type="button" onclick="enablePriceEdit()">Edit</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="field-lbl">Discount</label>
+                            <div class="ig">
+                                <span class="ig-pre">₹</span>
+                                <input type="number" name="discount" class="di red-text" value="0" min="0"
+                                       style="border-radius:0 10px 10px 0;border-right:1px solid var(--border);">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pay-row">
+                        <button type="submit" name="payment_method" value="Cash" class="pay-btn pay-cash">&nbsp;CASH PAYMENT</button>
+                        <button type="submit" name="payment_method" value="UPI" class="pay-btn pay-upi">&nbsp;UPI PAYMENT</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div>
+            <div class="glass" style="padding:18px;">
+                <button class="side-btn g" data-bs-toggle="modal" data-bs-target="#addStockModal">+ &nbsp;Add New Inventory</button>
+                <button class="side-btn" onclick="printAll()">🖨 &nbsp;Print All Labels</button>
+                <hr style="border:none;border-top:1px solid var(--border);margin:6px 0 12px;">
+                <button class="side-btn r" data-bs-toggle="modal" data-bs-target="#returnModal">↩ &nbsp;Process Return</button>
+            </div>
+        </div>
+    </div>
+    <div class="inv-section" id="inventory-list">
+        <div class="sec-divider"><span>Current Inventory</span></div>
+        <div class="inv-grid">
+            {% for shoe in shoes %}
+            <div class="inv-card shoe-card" data-batch="{{ shoe.batch_no }}" data-qty="{{ shoe.quantity }}" data-src="/static/qrcodes/{{ shoe.batch_no }}.png">
+                <img src="/static/qrcodes/{{ shoe.batch_no }}.png" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+                <div class="no-qr-msg">No QR label</div>
+                <span class="i-batch">{{ shoe.batch_no }}</span>
+                <span class="i-qty">{{ shoe.quantity }} units</span>
+                <div class="card-actions">
+                    <button class="i-btn" onclick="printSticker('{{ shoe.batch_no }}', '/static/qrcodes/{{ shoe.batch_no }}.png', {{ shoe.quantity }})">🖨 Print</button>
+                    <a href="/delete_qr/{{ shoe.batch_no }}" class="i-btn del" onclick="return confirm('Delete QR label for {{ shoe.batch_no }}?')">🗑 QR</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<!-- Mobile QR -->
+<div class="modal fade" id="mobileModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">📱 Mobile POS Access</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body" style="text-align:center;">
+            <img src="/static/mobile_connect.png" class="qr-preview">
+            <p class="qr-url">Scan with shopkeeper phone</p><p class="qr-url g">{{ mobile_url }}</p>
+        </div>
+    </div></div>
+</div>
+<!-- Display QR -->
+<div class="modal fade" id="displayModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">🖥 Customer Facing Display</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body" style="text-align:center;">
+            <img src="/static/display_connect.png" class="qr-preview">
+            <p class="qr-url">Scan this with the customer tablet</p>
+        </div>
+    </div></div>
+</div>
+<!-- Add Stock -->
+<div class="modal fade" id="addStockModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">+ Add New Inventory</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <form action="/add_shoe" method="POST">
+                <div class="form-duo">
+                    <div>
+                        <label class="field-lbl">Supplier Code</label>
+                        <input type="text" name="supplier" class="di" placeholder="e.g. NIK" maxlength="3" required oninput="this.value=this.value.toUpperCase()" pattern="[A-Za-z0-9]{1,3}">
+                        <p class="field-hint">Max 3 chars · auto CAPS</p>
+                    </div>
+                    <div>
+                        <label class="field-lbl">Material / Color</label>
+                        <input type="text" name="material" class="di" placeholder="e.g. BLK" maxlength="3" required oninput="this.value=this.value.toUpperCase()" pattern="[A-Za-z0-9]{1,3}">
+                        <p class="field-hint">Max 3 chars · auto CAPS</p>
+                    </div>
+                </div>
+                <div class="form-duo">
+                    <div><label class="field-lbl">Cost Price (₹)</label><input type="number" name="cost" class="di" placeholder="0" required min="1"></div>
+                    <div><label class="field-lbl">Quantity</label><input type="number" name="quantity" class="di" placeholder="1" value="1" required min="1"></div>
+                </div>
+                <button type="submit" class="modal-cta green">⚡ Generate & Save Batch</button>
+            </form>
+        </div>
+    </div></div>
+</div>
+<!-- Return -->
+<div class="modal fade" id="returnModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" style="color:var(--red);">↩ Process Return</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <form action="/return_item" method="POST">
+                <div class="form-field">
+                    <label class="field-lbl">Batch Code from Box</label>
+                    <input type="text" name="batch_no" class="di" placeholder="Scan or type batch code" required>
+                </div>
+                <button type="submit" class="modal-cta red">Confirm Return & Update Stock</button>
+            </form>
+        </div>
+    </div></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function applyTheme(t){document.documentElement.setAttribute('data-theme',t);const btn=document.getElementById('theme-btn');if(btn)btn.textContent=t==='dark'?'🌙':'☀️';localStorage.setItem('sp_theme',t);}
+    function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');}
+    window.addEventListener('DOMContentLoaded',()=>{
+        applyTheme(localStorage.getItem('sp_theme')||'dark');
+        if(!sessionStorage.getItem('splashShown')){
+            const s=document.getElementById('splash-screen');s.style.display='flex';
+            setTimeout(()=>{s.style.opacity='0';setTimeout(()=>{s.style.display='none';sessionStorage.setItem('splashShown','true');},900);},2200);
+        }
+    });
+    let typingTimer;
+    function fetchPrice(){
+        const batch=document.getElementById('scan_box').value;const priceBox=document.getElementById('price_box');
+        if(batch.length>5){clearTimeout(typingTimer);typingTimer=setTimeout(()=>{fetch('/get_shoe_price/'+batch).then(r=>r.json()).then(data=>{if(data.success){priceBox.value=data.price;priceBox.setAttribute('readonly',true);priceBox.style.color='var(--green)';}});},200);}
+    }
+    function enablePriceEdit(){const p=document.getElementById('price_box');p.removeAttribute('readonly');p.style.color='';p.focus();}
+    function printSticker(batch,src,qty){let q=prompt("Enter print quantity:",qty);if(q===null)return;let count=parseInt(q)||qty;let c='<html><head></head><body style="font-family:sans-serif;text-align:center;margin:0;">';for(let i=0;i<count;i++)c+=`<div style="width:2in;height:1in;display:flex;flex-direction:column;align-items:center;justify-content:center;page-break-after:always;border:1px dashed #ccc;"><h2 style="margin:0;font-size:10px;">SHOE POINT</h2><img src="${src}" style="width:60px;"><div style="font-size:10px;font-weight:bold;">${batch}</div></div>`;executePrint(c+'</body></html>');}
+    function printAll(){const cards=document.querySelectorAll('.shoe-card');let fixedQty=prompt("Enter quantity per shoe (leave blank for stock-based):");if(fixedQty===null)return;let c='<html><head></head><body style="font-family:sans-serif;text-align:center;margin:0;">';cards.forEach(card=>{let qty=fixedQty?parseInt(fixedQty):parseInt(card.dataset.qty);for(let i=0;i<qty;i++)c+=`<div style="width:2in;height:1in;display:flex;flex-direction:column;align-items:center;justify-content:center;page-break-after:always;border:1px dashed #ccc;"><h2 style="margin:0;font-size:10px;">SHOE POINT</h2><img src="${card.dataset.src}" style="width:60px;"><div style="font-size:10px;font-weight:bold;">${card.dataset.batch}</div></div>`;});executePrint(c+'</body></html>');}
+    function executePrint(content){let w=window.open('','_blank','width=400,height=400');if(!w){alert("Pop-up blocked! Allow pop-ups to print.");return;}w.document.write(content);w.document.close();setTimeout(()=>{w.focus();w.print();w.close();},500);}
+    let html5QrCode;
+    function toggleScanner(){const r=document.getElementById('reader');if(r.style.display==='none'||r.style.display===''){r.style.display='block';html5QrCode=new Html5Qrcode("reader");html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:250},(txt)=>{document.getElementById('scan_box').value=txt;stopScanner();fetchPrice();});}else stopScanner();}
+    function stopScanner(){if(html5QrCode)html5QrCode.stop().then(()=>document.getElementById('reader').style.display='none');}
+</script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Dashboard — Shoe Point</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        (function(){ var t=localStorage.getItem('sp_theme')||'dark'; document.documentElement.setAttribute('data-theme',t); })();
+    </script>
+    <style>
+        [data-theme="dark"] {
+            --bg-deep:#07080d; --surface:rgba(255,255,255,0.04); --surface2:rgba(255,255,255,0.07);
+            --border:rgba(255,255,255,0.07); --border-hi:rgba(255,255,255,0.14);
+            --green:#00e99b; --green-dim:rgba(0,233,155,0.12);
+            --blue:#3d8bff; --blue-dim:rgba(61,139,255,0.12);
+            --red:#ff4f6d; --red-dim:rgba(255,79,109,0.12);
+            --amber:#f5a623; --amber-dim:rgba(245,166,35,0.12);
+            --text:#eaeef4; --muted:rgba(234,238,244,0.38);
+            --nav-bg:rgba(7,8,13,0.90); --modal-bg:#0e0f1a;
+            --blob-o:1; --close-f:invert(1) opacity(0.45); --close-h:invert(1) opacity(0.9);
+        }
+        [data-theme="light"] {
+            --bg-deep:#f0f2f7; --surface:rgba(255,255,255,0.82); --surface2:rgba(255,255,255,0.97);
+            --border:rgba(0,0,0,0.09); --border-hi:rgba(0,0,0,0.18);
+            --green:#00a86b; --green-dim:rgba(0,168,107,0.10);
+            --blue:#1a6fe8; --blue-dim:rgba(26,111,232,0.10);
+            --red:#e03050; --red-dim:rgba(224,48,80,0.10);
+            --amber:#c97b0a; --amber-dim:rgba(201,123,10,0.10);
+            --text:#111827; --muted:rgba(17,24,39,0.45);
+            --nav-bg:rgba(240,242,247,0.92); --modal-bg:#ffffff;
+            --blob-o:0.12; --close-f:opacity(0.4); --close-h:opacity(0.85);
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        body{background:var(--bg-deep);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;overflow-x:hidden;transition:background 0.3s,color 0.3s;}
+        .blob{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;opacity:var(--blob-o);}
+        .blob-a{width:500px;height:500px;top:-160px;right:-100px;background:radial-gradient(circle,rgba(61,139,255,0.08) 0%,transparent 70%);}
+        .blob-b{width:400px;height:400px;bottom:-100px;left:-80px;background:radial-gradient(circle,rgba(0,233,155,0.06) 0%,transparent 70%);}
+        .top-nav{position:sticky;top:0;z-index:200;background:var(--nav-bg);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;transition:background 0.3s,border-color 0.3s;}
+        .nav-brand{font-size:0.68rem;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;color:var(--muted);}
+        .nav-actions{display:flex;gap:8px;align-items:center;}
+        .theme-toggle{width:36px;height:36px;border-radius:50%;border:1px solid var(--border-hi);background:var(--surface);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s,border-color 0.2s,transform 0.2s;}
+        .theme-toggle:hover{background:var(--surface2);border-color:var(--green);transform:rotate(25deg) scale(1.1);}
+        .pill{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:999px;border:1px solid var(--border-hi);background:var(--surface);color:var(--text);font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;text-decoration:none;transition:background 0.17s,border-color 0.17s,transform 0.12s;}
+        .pill:hover{background:var(--surface2);color:var(--text);transform:translateY(-1px);}
+        .pill.r{border-color:rgba(224,48,80,0.35);color:var(--red);}
+        .pill.r:hover{background:var(--red-dim);border-color:var(--red);}
+        .pill.sec{color:var(--muted);}
+        .alerts-zone{padding:14px 28px 0;position:relative;z-index:1;}
+        .flash-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-radius:10px;border:1px solid;font-size:0.85rem;font-weight:500;margin-bottom:8px;animation:popIn 0.25s ease;}
+        @keyframes popIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+        .flash-bar.s{background:var(--green-dim);border-color:rgba(0,200,120,0.3);color:var(--green);}
+        .flash-bar.e{background:var(--red-dim);border-color:rgba(224,48,80,0.3);color:var(--red);}
+        .flash-close{background:none;border:none;cursor:pointer;font-size:1.1rem;color:inherit;opacity:0.6;}
+        .flash-close:hover{opacity:1;}
+        .main-wrap{padding:24px 28px 48px;position:relative;z-index:1;}
+        .dash-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;}
+        .glass{background:var(--surface);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(14px);transition:border-color 0.2s,background 0.3s;}
+        .glass:hover{border-color:var(--border-hi);}
+        .panel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--border);}
+        .panel-label{font-size:0.68rem;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);}
+        .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px;}
+        .stat-card{border-radius:14px;border:1px solid var(--border);padding:20px 22px;text-align:center;transition:transform 0.18s,border-color 0.18s;position:relative;overflow:hidden;}
+        .stat-card:hover{transform:translateY(-3px);}
+        .stat-card.today{background:linear-gradient(135deg,rgba(0,196,124,0.12),rgba(0,233,155,0.06));border-color:rgba(0,233,155,0.25);}
+        .stat-card.range{background:linear-gradient(135deg,rgba(31,107,255,0.12),rgba(61,139,255,0.06));border-color:rgba(61,139,255,0.25);}
+        .stat-card.total{background:linear-gradient(135deg,rgba(245,166,35,0.10),rgba(245,166,35,0.05));border-color:rgba(245,166,35,0.25);}
+        .stat-lbl{font-size:0.65rem;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;opacity:0.65;margin-bottom:8px;display:block;}
+        .stat-val{font-size:2.4rem;font-weight:800;letter-spacing:-1px;line-height:1;}
+        .stat-card.today .stat-val{color:var(--green);}
+        .stat-card.range .stat-val{color:var(--blue);}
+        .stat-card.total .stat-val{color:var(--amber);}
+        .field-lbl{display:block;font-size:0.65rem;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+        .di{width:100%;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color 0.17s,background 0.17s,box-shadow 0.17s;}
+        .di:focus{border-color:var(--green);background:var(--green-dim);box-shadow:0 0 0 3px rgba(0,168,107,0.08);}
+        .di::placeholder{color:var(--muted);font-family:'Outfit',sans-serif;font-size:0.83rem;}
+        input[type="date"].di::-webkit-calendar-picker-indicator{filter:invert(0.7);cursor:pointer;}
+        [data-theme="light"] input[type="date"].di::-webkit-calendar-picker-indicator{filter:invert(0);}
+        .filter-bar{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px;display:grid;grid-template-columns:1fr 1fr auto auto;gap:12px;align-items:end;}
+        [data-theme="light"] .filter-bar{background:rgba(0,0,0,0.03);}
+        .filter-bar label{margin-bottom:7px;display:block;}
+        .cta-btn{padding:10px 18px;border:none;border-radius:9px;font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;transition:opacity 0.17s,transform 0.12s;white-space:nowrap;}
+        .cta-btn:hover{opacity:0.88;transform:translateY(-1px);}
+        .cta-btn.green{background:linear-gradient(135deg,#00c47c,#00e99b);color:#061a10;}
+        .cta-btn.ghost{background:var(--surface2);border:1px solid var(--border-hi);color:var(--text);text-decoration:none;display:inline-flex;align-items:center;}
+        .search-wrap{position:relative;margin-bottom:16px;}
+        .search-wrap .di{padding-left:40px;}
+        .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:0.95rem;pointer-events:none;}
+        #no-results{display:none;text-align:center;padding:28px 0;color:var(--muted);font-size:0.88rem;}
+        .ledger-table{width:100%;border-collapse:collapse;}
+        .ledger-table th{font-size:0.63rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:0 14px 10px;text-align:left;border-bottom:1px solid var(--border);}
+        .ledger-table td{padding:13px 14px;font-size:0.88rem;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
+        [data-theme="light"] .ledger-table td{border-bottom:1px solid rgba(0,0,0,0.04);}
+        .ledger-table tbody tr{transition:background 0.15s;}
+        .ledger-table tbody tr:hover{background:rgba(255,255,255,0.025);}
+        [data-theme="light"] .ledger-table tbody tr:hover{background:rgba(0,0,0,0.025);}
+        .ledger-table tbody tr.hidden-row{display:none;}
+        .td-date{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--muted);}
+        .td-batch{font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:600;}
+        .td-price{font-family:'JetBrains Mono',monospace;font-size:0.88rem;}
+        .td-profit{font-family:'JetBrains Mono',monospace;font-size:0.88rem;font-weight:700;color:var(--green);}
+        .badge-upi{display:inline-block;padding:3px 10px;border-radius:999px;font-size:0.7rem;font-weight:700;letter-spacing:0.5px;background:var(--blue-dim);color:var(--blue);border:1px solid rgba(61,139,255,0.3);}
+        .badge-cash{display:inline-block;padding:3px 10px;border-radius:999px;font-size:0.7rem;font-weight:700;letter-spacing:0.5px;background:var(--green-dim);color:var(--green);border:1px solid rgba(0,200,120,0.3);}
+        .del-btn{padding:4px 12px;border-radius:7px;font-size:0.75rem;font-weight:700;border:1px solid rgba(224,48,80,0.3);color:var(--red);background:none;cursor:pointer;text-decoration:none;transition:background 0.15s,border-color 0.15s;font-family:'Outfit',sans-serif;display:inline-block;}
+        .del-btn:hover{background:var(--red-dim);border-color:var(--red);color:var(--red);}
+        .empty-row td{text-align:center;padding:32px;color:var(--muted);font-size:0.88rem;}
+        .alert-list{list-style:none;}
+        .alert-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+        .alert-item:last-child{border-bottom:none;}
+        .alert-batch{font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:600;}
+        .alert-qty{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:0.7rem;font-weight:700;background:var(--amber-dim);color:var(--amber);border:1px solid rgba(200,123,10,0.3);}
+        .alert-stable{color:var(--muted);font-size:0.85rem;}
+        .alert-del-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;border:1px solid rgba(224,48,80,0.25);background:none;color:var(--red);font-size:0.85rem;text-decoration:none;cursor:pointer;opacity:0.6;transition:opacity 0.15s,background 0.15s,border-color 0.15s,transform 0.12s;}
+        .alert-del-btn:hover{opacity:1;background:var(--red-dim);border-color:var(--red);transform:scale(1.1);color:var(--red);}
+        .modal-content{background:var(--modal-bg);border:1px solid var(--border-hi);border-radius:18px;color:var(--text);font-family:'Outfit',sans-serif;transition:background 0.3s;}
+        .modal-header{border-bottom:1px solid var(--border);padding:20px 24px;}
+        .modal-title{font-size:1rem;font-weight:700;}
+        .modal-body{padding:24px;}
+        .btn-close{filter:var(--close-f);}
+        .btn-close:hover{filter:var(--close-h);}
+        .form-field{margin-bottom:16px;}
+        .modal-submit{display:block;width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#00c47c,#00e99b);color:#061a10;font-family:'Outfit',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:opacity 0.17s;}
+        .modal-submit:hover{opacity:0.88;}
+        @media(max-width:1000px){.dash-grid{grid-template-columns:1fr;}}
+        @media(max-width:700px){.main-wrap{padding:14px 12px 36px;}.top-nav{padding:0 14px;}.alerts-zone{padding:12px 12px 0;}.filter-bar{grid-template-columns:1fr 1fr;}.stats-row{grid-template-columns:1fr 1fr;}}
+        @media(max-width:460px){.filter-bar{grid-template-columns:1fr;}}
+    </style>
+</head>
+<body>
+<div class="blob blob-a"></div>
+<div class="blob blob-b"></div>
+
+<nav class="top-nav">
+    <span class="nav-brand">⚙ Management Dashboard</span>
+    <div class="nav-actions">
+        <a href="/" class="pill">← Back to POS</a>
+        <button class="pill sec" data-bs-toggle="modal" data-bs-target="#passwordModal">🔐 Security</button>
+        <a href="/logout" class="pill r">Logout</a>
+        <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle Light / Dark">🌙</button>
+    </div>
+</nav>
+
+<div class="alerts-zone">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash-bar s">
+            <span>{{ messages[0] }}</span>
+            <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
+        </div>
+        {% endif %}
+    {% endwith %}
+</div>
+
+<div class="main-wrap">
+    <div class="stats-row">
+        <div class="stat-card today">
+            <span class="stat-lbl">Today's Profit</span>
+            <span class="stat-val">₹{{ daily_profit | int }}</span>
+        </div>
+        {% if filtered_profit is not none %}
+        <div class="stat-card range">
+            <span class="stat-lbl">Filtered Period Profit</span>
+            <span class="stat-val">₹{{ filtered_profit | int }}</span>
+        </div>
+        {% endif %}
+        <div class="stat-card total">
+            <span class="stat-lbl">Lifetime Profit</span>
+            <span class="stat-val">₹{{ total_profit | int }}</span>
+        </div>
+    </div>
+
+    <div class="dash-grid">
+        <div class="glass">
+            <div class="panel-head">
+                <span class="panel-label">Sales Ledger</span>
+                <span style="font-size:0.75rem;color:var(--muted);" id="row-count"></span>
+            </div>
+            <div style="padding:18px 22px 0;">
+                <form action="/owner" method="GET">
+                    <div class="filter-bar">
+                        <div><label class="field-lbl">Start Date</label><input type="date" name="start_date" class="di" value="{{ start_date or '' }}" required></div>
+                        <div><label class="field-lbl">End Date</label><input type="date" name="end_date" class="di" value="{{ end_date or '' }}" required></div>
+                        <button type="submit" class="cta-btn green" style="margin-top:auto;">Filter</button>
+                        {% if start_date %}<a href="/owner" class="cta-btn ghost" style="margin-top:auto;">Clear</a>{% endif %}
+                    </div>
+                </form>
+                <div class="search-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="live-search" class="di" placeholder="Search by date, batch, price, UPI or Cash..." oninput="filterTable()">
+                </div>
+            </div>
+            <div style="padding:0 0 8px;overflow-x:auto;">
+                <table class="ledger-table" id="sales-table">
+                    <thead><tr><th>Date & Time</th><th>Batch Code</th><th>Sale Price</th><th>Profit</th><th>Method</th><th>Action</th></tr></thead>
+                    <tbody id="table-body">
+                        {% for sale in sales %}
+                        <tr class="data-row" data-search="{{ sale.date.strftime('%d-%b-%Y %H:%M') }} {{ sale.batch_no }} {{ sale.sell_price }} {{ sale.profit }} {{ sale.payment_method }}">
+                            <td class="td-date">{{ sale.date.strftime('%d %b %Y · %H:%M') }}</td>
+                            <td class="td-batch">{{ sale.batch_no }}</td>
+                            <td class="td-price">₹{{ sale.sell_price | int }}</td>
+                            <td class="td-profit">₹{{ sale.profit | int }}</td>
+                            <td>{% if sale.payment_method == 'UPI' %}<span class="badge-upi">UPI</span>{% else %}<span class="badge-cash">CASH</span>{% endif %}</td>
+                            <td><a href="/delete_sale/{{ sale.id }}" class="del-btn" onclick="return confirm('Delete this sale record permanently?')">Delete</a></td>
+                        </tr>
+                        {% else %}
+                        <tr class="empty-row"><td colspan="6">No sales records found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div id="no-results">No records match your search.</div>
+            </div>
+        </div>
+
+        <div>
+            <div class="glass">
+                <div class="panel-head">
+                    <span class="panel-label" style="color:var(--amber);">⚠ Low Stock Alerts</span>
+                </div>
+                <div style="padding:4px 22px 18px;">
+                    <ul class="alert-list">
+                        {% for shoe in low_stock %}
+                        <li class="alert-item">
+                            <span class="alert-batch">{{ shoe.batch_no }}</span>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span class="alert-qty">{{ shoe.quantity }} left</span>
+                                <a href="/delete_shoe/{{ shoe.id }}" class="alert-del-btn"
+                                   title="Delete batch {{ shoe.batch_no }}"
+                                   onclick="return confirm('Permanently delete batch {{ shoe.batch_no }} from inventory? This cannot be undone.')">🗑</a>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li class="alert-item"><span class="alert-stable">✓ All inventory levels stable</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="passwordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">🔐 Update Security Credentials</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <form action="/change_password" method="POST">
+                <div class="form-field"><label class="field-lbl">Current Password</label><input type="password" name="old_password" class="di" placeholder="Verify your identity" required></div>
+                <div class="form-field"><label class="field-lbl">New Password</label><input type="password" name="new_password" class="di" placeholder="Enter new secure password" required></div>
+                <button type="submit" class="modal-submit">Confirm & Update Password</button>
+            </form>
+        </div>
+    </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function applyTheme(t){
+        document.documentElement.setAttribute('data-theme',t);
+        const btn=document.getElementById('theme-btn');
+        if(btn) btn.textContent=t==='dark'?'🌙':'☀️';
+        localStorage.setItem('sp_theme',t);
+    }
+    function toggleTheme(){
+        applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+    }
+    window.addEventListener('DOMContentLoaded',()=>{ applyTheme(localStorage.getItem('sp_theme')||'dark'); });
+
+    function filterTable(){
+        const q=document.getElementById('live-search').value.toLowerCase().trim();
+        const rows=document.querySelectorAll('#table-body .data-row');
+        let visible=0;
+        rows.forEach(row=>{
+            const match=!q||row.dataset.search.toLowerCase().includes(q);
+            row.classList.toggle('hidden-row',!match);
+            if(match) visible++;
+        });
+        document.getElementById('no-results').style.display=(q&&visible===0)?'block':'none';
+        document.getElementById('row-count').textContent=q?`${visible} of ${rows.length} records`:`${rows.length} records`;
+    }
+    window.addEventListener('DOMContentLoaded',()=>{
+        const rows=document.querySelectorAll('#table-body .data-row');
+        if(rows.length>0) document.getElementById('row-count').textContent=`${rows.length} records`;
+    });
+</script>
+</body>
+</html>
